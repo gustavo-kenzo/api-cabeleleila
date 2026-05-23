@@ -16,6 +16,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             FROM appointments ap 
             WHERE ap.client_id = :clientId 
             AND WEEK(ap.schedule_at,1) = WEEK(:scheduleAt, 1)
+            LIMIT 1
             """)
     Optional<Instant> getScheduleInWeek(Long clientId, Instant scheduleAt);
 
