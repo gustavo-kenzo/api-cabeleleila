@@ -25,7 +25,7 @@ public class ClientService {
     public ClientResponse register(ClientCreateRequest clientDTO) {
 
         validateEmailAvailability(clientDTO.email());
-        validateEmailAvailability(clientDTO.phone());
+        validatePhoneAvailability(clientDTO.phone());
 
         var newClient = new Client(null, clientDTO.name(), clientDTO.email(), clientDTO.phone(), true, List.of());
         var client = clientRepository.save(newClient);

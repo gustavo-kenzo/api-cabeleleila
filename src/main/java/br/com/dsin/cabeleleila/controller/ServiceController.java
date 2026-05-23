@@ -1,6 +1,6 @@
 package br.com.dsin.cabeleleila.controller;
 
-import br.com.dsin.cabeleleila.dto.register.ServiceProvidedRegister;
+import br.com.dsin.cabeleleila.dto.request.ServiceProvidedCreateRequest;
 import br.com.dsin.cabeleleila.dto.response.ServiceProvidedResponse;
 import br.com.dsin.cabeleleila.service.ServiceProvidedService;
 import jakarta.validation.Valid;
@@ -19,7 +19,7 @@ public class ServiceController {
     private final ServiceProvidedService service;
 
     @PostMapping
-    public ResponseEntity<ServiceProvidedResponse> registerService(@RequestBody @Valid ServiceProvidedRegister serviceDTO) {
-        return ResponseEntity.ok(service.registerService(serviceDTO));
+    public ResponseEntity<ServiceProvidedResponse> registerService(@RequestBody @Valid ServiceProvidedCreateRequest dto) {
+        return ResponseEntity.ok(service.register(dto));
     }
 }

@@ -11,6 +11,13 @@ import java.util.Optional;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
+    //Poderia usar query JPQL para evitar acoplamento com banco MySQL
+    //Nova query:
+        /*SELECT a.scheduleAt FROM Appointment a
+        WHERE a.client.id = :clientId
+        AND a.scheduleAt >= :weekStart
+        AND a.scheduleAt < :weekEnd */
+    //A logica de weekStart e weekEnd ficaria no service
     @Query(nativeQuery = true, value = """ 
             SELECT ap.schedule_at 
             FROM appointments ap 
@@ -18,7 +25,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             AND WEEK(ap.schedule_at,1) = WEEK(:scheduleAt, 1)
             LIMIT 1
             """)
-    Optional<Instant> getScheduleInWeek(Long clientId, Instant scheduleAt);
+    Optional<Instant> findScheduleInWeek(Long clientId, Instant scheduleAt);
 
     Page<Appointment> findByClientIdAndScheduleAtBetween(Pageable pageable, Long clientId, Instant initialDate, Instant endDate);
 

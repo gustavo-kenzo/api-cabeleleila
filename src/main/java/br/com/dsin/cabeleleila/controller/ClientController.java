@@ -1,6 +1,6 @@
 package br.com.dsin.cabeleleila.controller;
 
-import br.com.dsin.cabeleleila.dto.register.ClientRegister;
+import br.com.dsin.cabeleleila.dto.request.ClientCreateRequest;
 import br.com.dsin.cabeleleila.dto.response.ClientDetailResponse;
 import br.com.dsin.cabeleleila.dto.response.ClientResponse;
 import br.com.dsin.cabeleleila.service.ClientService;
@@ -19,8 +19,8 @@ public class ClientController {
     private final ClientService clientService;
 
     @PostMapping
-    public ResponseEntity<ClientResponse> registerClient(@RequestBody @Valid ClientRegister dto) {
-        return ResponseEntity.ok(clientService.registerClient(dto));
+    public ResponseEntity<ClientResponse> registerClient(@RequestBody @Valid ClientCreateRequest dto) {
+        return ResponseEntity.ok(clientService.register(dto));
     }
 
     @GetMapping("/{id}")
