@@ -54,7 +54,7 @@ public class AppointmentService {
             appointment.setScheduleAt(dto.scheduleAt());
         }
         if (dto.serviceId() != null) {
-            var service = serviceProvidedRepository.getReferenceById(dto.serviceId());
+            var service = serviceProvidedRepository.findById(dto.serviceId()).orElseThrow(()-> new RuntimeException("Service not found"));
             appointment.setService(service);
         }
         if (dto.description() != null) {
