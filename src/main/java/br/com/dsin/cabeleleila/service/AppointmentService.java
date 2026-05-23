@@ -1,13 +1,12 @@
 package br.com.dsin.cabeleleila.service;
 
 import br.com.dsin.cabeleleila.domain.Appointment;
+import br.com.dsin.cabeleleila.domain.ScheduleStatus;
 import br.com.dsin.cabeleleila.domain.repository.AppointmentRepository;
-import br.com.dsin.cabeleleila.domain.repository.ClientRepository;
-import br.com.dsin.cabeleleila.domain.repository.ServiceProvidedRepository;
-import br.com.dsin.cabeleleila.dto.register.AppointmentRegister;
+import br.com.dsin.cabeleleila.dto.request.AppointmentCreateRequest;
 import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
-import br.com.dsin.cabeleleila.dto.update.AppointmentSuggestionConfirm;
-import br.com.dsin.cabeleleila.dto.update.AppointmentUpdate;
+import br.com.dsin.cabeleleila.dto.request.AppointmentSuggestionConfirmRequest;
+import br.com.dsin.cabeleleila.dto.request.AppointmentUpdateRequest;
 import br.com.dsin.cabeleleila.mapper.AppointmentMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,55 +21,61 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class AppointmentService {
 
+    private static final long RESCHEDULE_DEADLINE_HOURS = 48;
     private final AppointmentRepository appointmentRepository;
-    private final ServiceProvidedRepository serviceProvidedRepository;
-    private final ClientRepository clientRepository;
+    private final ServiceProvidedService serviceProvidedService;
+    private final ClientService clientService;
     private final AppointmentMapper appointmentMapper;
 
     @Transactional
-    public AppointmentResponse schedule(AppointmentRegister appointmentDTO) {
-        var client = clientRepository.getReferenceById(appointmentDTO.clientId());
-        var service = serviceProvidedRepository.getReferenceById(appointmentDTO.serviceId());
-        var newAppointment = appointmentMapper.toEntity(appointmentDTO, client, service);
+    public AppointmentResponse create(AppointmentCreateRequest appointmentDTO) {
+        var client = clientService.getClientReferenceById(appointmentDTO.clientId());
+        var service = serviceProvidedService.getServiceReferenceById(appointmentDTO.serviceId());
+        var newAppointment = new Appointment(null, client, service, Instant.now(), appointmentDTO.scheduleAt(), appointmentDTO.description(), ScheduleStatus.PENDING);
 
 
-        var alreadySchedule = appointmentRepository.getScheduleInWeek(appointmentDTO.clientId(), appointmentDTO.scheduleAt());
+        var alreadySchedule = appointmentRepository.findScheduleInWeek(appointmentDTO.clientId(), appointmentDTO.scheduleAt());
         var appointment = appointmentRepository.save(newAppointment);
         if (alreadySchedule.isPresent()) {
-            return appointmentMapper.toResponseWithSuggestion(appointment, ("Do you want to schedule it for" + alreadySchedule + " ?"));
+            return appointmentMapper.toResponseWithSuggestion(appointment, alreadySchedule.get());
         }
 
         return appointmentMapper.toResponse(appointment);
     }
 
     @Transactional
-    public AppointmentResponse updateSchedule(Long id, AppointmentUpdate dto) {
+    public AppointmentResponse update(Long id, AppointmentUpdateRequest dto) {
         var appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
         var date = appointment.getScheduleAt();
         if (dto.scheduleAt() != null) {
-            if (Duration.between(Instant.now(), date).toHours() < 48) {
-                throw new RuntimeException("Date can only be rescheduled by phone");
-            }
-            appointment.setScheduleAt(dto.scheduleAt());
+            validateReschedule(appointment);
+            appointment.changeSchedule(dto.scheduleAt());
         }
         if (dto.serviceId() != null) {
-            var service = serviceProvidedRepository.findById(dto.serviceId()).orElseThrow(()-> new RuntimeException("Service not found"));
-            appointment.setService(service);
+            var service = serviceProvidedService.findServiceById(dto.serviceId()).orElseThrow(() -> new RuntimeException("Service not found"));
+            appointment.changeService(service);
         }
         if (dto.description() != null) {
-            appointment.setDescription(dto.description());
+            appointment.changeDescription(dto.description());
         }
         return appointmentMapper.toResponse(appointment);
+    }
+
+    private void validateReschedule(Appointment appointment) {
+        long hoursRemaining = Duration.between(Instant.now(), appointment.getScheduleAt()).toHours();
+        if (hoursRemaining < RESCHEDULE_DEADLINE_HOURS) {
+            throw new RuntimeException("Appointment can only be rescheduled by phone when less than 2 days away");
+        }
     }
 
     @Transactional
-    public AppointmentResponse confirmSuggestion(Long id, AppointmentSuggestionConfirm dto) {
+    public AppointmentResponse confirmSuggestion(Long id, AppointmentSuggestionConfirmRequest dto) {
         var appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
-        appointment.setScheduleAt(dto.newDate());
+        appointment.changeSchedule(dto.newDate());
         return appointmentMapper.toResponse(appointment);
     }
 
-    public Page<AppointmentResponse> findByDate(Long clientId, Pageable pageable, Instant initialDate, Instant endDate) {
+    public Page<AppointmentResponse> findByPeriod(Long clientId, Pageable pageable, Instant initialDate, Instant endDate) {
         Page<Appointment> appointments;
         if (initialDate != null && endDate != null) {
             appointments = appointmentRepository.findByClientIdAndScheduleAtBetween(pageable, clientId, initialDate, endDate);

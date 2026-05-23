@@ -1,7 +1,8 @@
 package br.com.dsin.cabeleleila.service;
 
+import br.com.dsin.cabeleleila.domain.Client;
 import br.com.dsin.cabeleleila.domain.repository.ClientRepository;
-import br.com.dsin.cabeleleila.dto.register.ClientRegister;
+import br.com.dsin.cabeleleila.dto.request.ClientCreateRequest;
 import br.com.dsin.cabeleleila.dto.response.ClientDetailResponse;
 import br.com.dsin.cabeleleila.dto.response.ClientResponse;
 import br.com.dsin.cabeleleila.mapper.ClientMapper;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ClientService {
@@ -19,19 +22,26 @@ public class ClientService {
     private final ClientMapper clientMapper;
 
     @Transactional
-    public ClientResponse registerClient(ClientRegister clientDTO) {
+    public ClientResponse register(ClientCreateRequest clientDTO) {
 
-        if (clientRepository.existsByEmail(clientDTO.email())) {
-            throw new RuntimeException("Email already in use");
-        }
+        validateEmailAvailability(clientDTO.email());
+        validateEmailAvailability(clientDTO.phone());
 
-        if (clientRepository.existsByPhone(clientDTO.phone())) {
-            throw new RuntimeException("Phone already in use");
-        }
-
-        var newClient = clientMapper.toEntity(clientDTO);
+        var newClient = new Client(null, clientDTO.name(), clientDTO.email(), clientDTO.phone(), true, List.of());
         var client = clientRepository.save(newClient);
         return clientMapper.toResponse(client);
+    }
+
+    private void validateEmailAvailability(String email) {
+        if (clientRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already in use");
+        }
+    }
+
+    private void validatePhoneAvailability(String phone) {
+        if (clientRepository.existsByPhone(phone)) {
+            throw new RuntimeException("Phone already in use");
+        }
     }
 
     public ClientDetailResponse findById(Long id) {
@@ -41,5 +51,9 @@ public class ClientService {
 
     public Page<ClientResponse> findAll(Pageable pageable) {
         return clientRepository.findAll(pageable).map(clientMapper::toResponse);
+    }
+
+    public Client getClientReferenceById(Long id) {
+        return clientRepository.getReferenceById(id);
     }
 }

@@ -1,9 +1,9 @@
 package br.com.dsin.cabeleleila.controller;
 
-import br.com.dsin.cabeleleila.dto.register.AppointmentRegister;
+import br.com.dsin.cabeleleila.dto.request.AppointmentCreateRequest;
 import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
-import br.com.dsin.cabeleleila.dto.update.AppointmentSuggestionConfirm;
-import br.com.dsin.cabeleleila.dto.update.AppointmentUpdate;
+import br.com.dsin.cabeleleila.dto.request.AppointmentSuggestionConfirmRequest;
+import br.com.dsin.cabeleleila.dto.request.AppointmentUpdateRequest;
 import br.com.dsin.cabeleleila.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,26 +24,26 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @PostMapping
-    public ResponseEntity<AppointmentResponse> schedule(@RequestBody @Valid AppointmentRegister dto) {
-        return ResponseEntity.ok(appointmentService.schedule(dto));
+    public ResponseEntity<AppointmentResponse> create(@RequestBody @Valid AppointmentCreateRequest dto) {
+        return ResponseEntity.ok(appointmentService.create(dto));
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<AppointmentResponse> updateSchedule(@PathVariable Long id, @RequestBody @Valid AppointmentUpdate dto) {
-        return ResponseEntity.ok(appointmentService.updateSchedule(id, dto));
+    public ResponseEntity<AppointmentResponse> update(@PathVariable Long id, @RequestBody @Valid AppointmentUpdateRequest dto) {
+        return ResponseEntity.ok(appointmentService.update(id, dto));
     }
 
     @PatchMapping("/{id}/confirm-suggestion")
-    public ResponseEntity<AppointmentResponse> confirmSuggestion(@PathVariable Long id, @RequestBody @Valid AppointmentSuggestionConfirm appointmentSuggestion) {
-        return ResponseEntity.ok(appointmentService.confirmSuggestion(id, appointmentSuggestion));
+    public ResponseEntity<AppointmentResponse> confirmSuggestion(@PathVariable Long id, @RequestBody @Valid AppointmentSuggestionConfirmRequest dto) {
+        return ResponseEntity.ok(appointmentService.confirmSuggestion(id, dto));
     }
 
-    @GetMapping("{clientId}")
-    public ResponseEntity<Page<AppointmentResponse>> findByDate(@PathVariable Long clientId,
-                                                                @RequestParam(required = false) Instant initialDate,
-                                                                @RequestParam(required = false) Instant endDate,
-                                                                @PageableDefault(size = 5, direction = Sort.Direction.DESC)
-                                                                Pageable pageable) {
-        return ResponseEntity.ok(appointmentService.findByDate(clientId, pageable, initialDate, endDate));
+    @GetMapping("/{clientId}/history")
+    public ResponseEntity<Page<AppointmentResponse>> findByPeriod(@PathVariable Long clientId,
+                                                                  @RequestParam(required = false) Instant initialDate,
+                                                                  @RequestParam(required = false) Instant endDate,
+                                                                  @PageableDefault(size = 5, direction = Sort.Direction.DESC)
+                                                                  Pageable pageable) {
+        return ResponseEntity.ok(appointmentService.findByPeriod(clientId, pageable, initialDate, endDate));
     }
 }
