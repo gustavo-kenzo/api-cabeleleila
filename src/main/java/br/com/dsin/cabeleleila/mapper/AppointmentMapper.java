@@ -8,6 +8,8 @@ import br.com.dsin.cabeleleila.dto.register.AppointmentRegister;
 import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Service
 public class AppointmentMapper {
 
@@ -16,7 +18,7 @@ public class AppointmentMapper {
                 null,
                 client,
                 service,
-                null,
+                Instant.now(),
                 dto.scheduleAt(),
                 dto.description(),
                 ScheduleStatus.PENDING
