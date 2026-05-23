@@ -1,11 +1,11 @@
-package br.com.dsin.cabeleleila.dto.update;
+package br.com.dsin.cabeleleila.dto.request;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
-public record AppointmentUpdate(
+public record AppointmentUpdateRequest(
         Long serviceId,
 
         @Future(message = " Schedule date must be future")

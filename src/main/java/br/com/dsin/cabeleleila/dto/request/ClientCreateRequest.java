@@ -1,4 +1,4 @@
-package br.com.dsin.cabeleleila.dto.register;
+package br.com.dsin.cabeleleila.dto.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record ClientRegister(
+public record ClientCreateRequest(
         @NotBlank(message = "Client name is required")
         @Size(max = 150, message = "Client name cannot exceed 150 characters")
         String name,
@@ -21,6 +21,6 @@ public record ClientRegister(
         String phone,
 
         @Valid
-        List<AppointmentRegister> appointmentRegisters
+        List<AppointmentCreateRequest> appointmentCreateRequests
 ) {
 }

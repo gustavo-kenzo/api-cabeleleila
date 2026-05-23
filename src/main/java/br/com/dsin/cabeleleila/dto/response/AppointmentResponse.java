@@ -12,6 +12,6 @@ public record AppointmentResponse(
         Instant scheduleAt,
         String description,
         ScheduleStatus status,
-        String suggestion
+        Instant suggestion
 ) {
 }
