@@ -1,23 +1,16 @@
 package br.com.dsin.cabeleleila.mapper;
 
 import br.com.dsin.cabeleleila.domain.Client;
-import br.com.dsin.cabeleleila.domain.ServiceProvided;
-import br.com.dsin.cabeleleila.dto.register.ClientRegister;
 import br.com.dsin.cabeleleila.dto.response.ClientDetailResponse;
 import br.com.dsin.cabeleleila.dto.response.ClientResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-
-@Service
+@Component
 @RequiredArgsConstructor
 public class ClientMapper {
     private final AppointmentMapper appointmentMapper;
 
-    public Client toEntity(ClientRegister dto) {
-        return new Client(null,dto.name(),dto.email(),dto.phone(),true, List.of());
-    }
 
     public ClientResponse toResponse(Client entity) {
         return new ClientResponse(entity.getId(), entity.getName(), entity.getEmail(), entity.getPhone(), entity.isActive());

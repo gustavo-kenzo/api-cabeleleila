@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.Instant;
 
@@ -24,23 +23,35 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "service_id", nullable = false)
-    @Setter
     private ServiceProvided service;
 
     @Column(nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
 
     @Column(nullable = false)
-    @Setter
     private Instant scheduleAt;
 
     @Column(length = 500)
-    @Setter
     private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Setter
     private ScheduleStatus status;
+
+    public void changeService(ServiceProvided newService) {
+        this.service = newService;
+    }
+
+    public void changeSchedule(Instant newDate) {
+        this.scheduleAt = newDate;
+    }
+
+    public void changeDescription(String newDescription) {
+        this.description = newDescription;
+    }
+
+    public void changeStatus(ScheduleStatus newStatus) {
+        this.status = newStatus;
+    }
 }
 
