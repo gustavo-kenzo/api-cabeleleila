@@ -1,5 +1,6 @@
 package br.com.dsin.cabeleleila.domain;
 
+import br.com.dsin.cabeleleila.domain.security.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,4 +33,8 @@ public class Client {
 
     @OneToMany(mappedBy = "client")
     private List<Appointment> appointments = new ArrayList<>();
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private User user;
 }

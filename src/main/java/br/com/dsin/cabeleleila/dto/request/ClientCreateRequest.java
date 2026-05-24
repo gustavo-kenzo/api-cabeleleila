@@ -20,7 +20,8 @@ public record ClientCreateRequest(
         @Size(min = 11, max = 15, message = "Invalid phone format (must be between 11 and 15 characters)")
         String phone,
 
-        @Valid
-        List<AppointmentCreateRequest> appointmentCreateRequests
+        //tirei tambem lista de appointments porque nao faz sentiudo criar client com appointments ja pronto
+        @NotBlank(message = "Client password is required")
+        String password
 ) {
 }
