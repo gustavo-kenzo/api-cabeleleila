@@ -1,5 +1,6 @@
 package br.com.dsin.cabeleleila.controller;
 
+import br.com.dsin.cabeleleila.domain.security.User;
 import br.com.dsin.cabeleleila.dto.request.AppointmentCreateRequest;
 import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
 import br.com.dsin.cabeleleila.dto.request.AppointmentSuggestionConfirmRequest;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -19,16 +22,20 @@ import java.time.Instant;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("appointment")
+@PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
     @PostMapping
-    public ResponseEntity<AppointmentResponse> create(@RequestBody @Valid AppointmentCreateRequest dto) {
-        return ResponseEntity.ok(appointmentService.create(dto));
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<AppointmentResponse> create(@AuthenticationPrincipal User user,
+                                                      @RequestBody @Valid AppointmentCreateRequest dto) {
+        return ResponseEntity.ok(appointmentService.create(user,dto));
     }
 
     @PutMapping("{id}")
+    @PreAuthorize("hasRole('CLIENT')")
     public ResponseEntity<AppointmentResponse> update(@PathVariable Long id, @RequestBody @Valid AppointmentUpdateRequest dto) {
         return ResponseEntity.ok(appointmentService.update(id, dto));
     }
@@ -39,6 +46,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/{clientId}/history")
+    @PreAuthorize("hasRole('ADMIN') or #clientId == authentication.principal.id")
     public ResponseEntity<Page<AppointmentResponse>> findByPeriod(@PathVariable Long clientId,
                                                                   @RequestParam(required = false) Instant initialDate,
                                                                   @RequestParam(required = false) Instant endDate,

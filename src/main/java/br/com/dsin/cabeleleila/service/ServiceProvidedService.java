@@ -23,11 +23,8 @@ public class ServiceProvidedService {
         return mapper.toResponse(service);
     }
 
-    public ServiceProvided getServiceReferenceById(Long id) {
-        return serviceRepository.getReferenceById(id);
-    }
 
-    public Optional<ServiceProvided> findServiceById(Long id) {
-        return serviceRepository.findById(id);
+    public ServiceProvided findServiceById(Long id) {
+        return serviceRepository.findById(id).orElseThrow(()-> new RuntimeException("Service not found"));
     }
 }
