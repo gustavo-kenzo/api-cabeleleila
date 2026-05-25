@@ -8,7 +8,12 @@ import org.springframework.stereotype.Component;
 public class ServiceProvidedMapper {
 
     public ServiceProvidedResponse toResponse(ServiceProvided entity) {
-        return new ServiceProvidedResponse(entity.getId(), entity.getName(), entity.getPrice(), entity.getDescription(), entity.isActive());
+        return new ServiceProvidedResponse(
+                entity.getId(),
+                entity.getName(),
+                entity.getPrice(),
+                entity.getDescription(),
+                entity.isActive());
     }
 }
 

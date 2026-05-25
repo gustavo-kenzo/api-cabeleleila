@@ -13,13 +13,24 @@ public class ClientMapper {
 
 
     public ClientResponse toResponse(Client entity) {
-        return new ClientResponse(entity.getId(), entity.getName(), entity.getEmail(), entity.getPhone(), entity.isActive());
+        return new ClientResponse(
+                entity.getId(),
+                entity.getName(),
+                entity.getEmail(),
+                entity.getPhone(),
+                entity.isActive());
     }
 
     // Não é bom que tudo seja trazido do banco e só então limitado.
     // Sugestão: fazer consultas separadas -> client sem appointments + appointments de client
     public ClientDetailResponse toDetailResponse(Client entity) {
-        return new ClientDetailResponse(entity.getId(), entity.getName(), entity.getEmail(), entity.getPhone(), entity.isActive(), entity.getAppointments().stream().map(appointmentMapper::toResponse).toList());
+        return new ClientDetailResponse(
+                entity.getId(),
+                entity.getName(),
+                entity.getEmail(),
+                entity.getPhone(),
+                entity.isActive(),
+                entity.getAppointments().stream().map(appointmentMapper::toResponse).toList());
 
     }
 }

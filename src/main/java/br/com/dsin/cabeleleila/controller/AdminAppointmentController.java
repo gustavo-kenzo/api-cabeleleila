@@ -7,7 +7,6 @@ import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
 import br.com.dsin.cabeleleila.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;

@@ -19,6 +19,9 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //OBS: campos name e email estao redundantes: existem em Client e User
+    //Alternativa: delegar para User essa responsabilidade e unificar essas duas classes no ClientService
+    //Isso envolve alterar DDL do banco
     @Column(nullable = false, length = 150)
     private String name;
 
