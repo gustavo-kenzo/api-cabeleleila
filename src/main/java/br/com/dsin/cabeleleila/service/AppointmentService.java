@@ -2,6 +2,7 @@ package br.com.dsin.cabeleleila.service;
 
 import br.com.dsin.cabeleleila.domain.Appointment;
 import br.com.dsin.cabeleleila.domain.ScheduleStatus;
+import br.com.dsin.cabeleleila.domain.ServiceProvided;
 import br.com.dsin.cabeleleila.domain.repository.AppointmentRepository;
 import br.com.dsin.cabeleleila.domain.security.User;
 import br.com.dsin.cabeleleila.dto.request.AppointmentCreateRequest;
@@ -19,14 +20,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
 public class AppointmentService {
 
-    private static final long RESCHEDULE_DEADLINE_HOURS = 48;
     private final AppointmentRepository appointmentRepository;
     private final ServiceProvidedService serviceProvidedService;
     private final ClientService clientService;
@@ -52,26 +51,13 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse update(Long id, AppointmentUpdateRequest dto) {
         var appointment = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment", id.toString()));
-        var date = appointment.getScheduleAt();
-        if (dto.scheduleAt() != null) {
-            validateReschedule(appointment);
-            appointment.changeSchedule(dto.scheduleAt());
-        }
-        if (dto.serviceId() != null) {
-            var service = serviceProvidedService.findServiceById(dto.serviceId());
-            appointment.changeService(service);
-        }
-        if (dto.description() != null) {
-            appointment.changeDescription(dto.description());
-        }
-        return appointmentMapper.toResponse(appointment);
-    }
+        ServiceProvided service = null;
+        if (dto.serviceId() != null)
+            service = serviceProvidedService.findServiceById(dto.serviceId());
 
-    private void validateReschedule(Appointment appointment) {
-        long hoursRemaining = Duration.between(Instant.now(), appointment.getScheduleAt()).toHours();
-        if (hoursRemaining < RESCHEDULE_DEADLINE_HOURS) {
-            throw new BusinessRuleException("Appointment can only be rescheduled by phone when less than 2 days away");
-        }
+        appointment.update(dto.scheduleAt(), service, dto.description(), true);
+
+        return appointmentMapper.toResponse(appointment);
     }
 
     @Transactional
@@ -107,16 +93,12 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse adminUpdate(Long id, @Valid AppointmentUpdateRequest dto) {
         var appointment = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment", id.toString()));
-        if (dto.scheduleAt() != null) {
-            appointment.changeSchedule(dto.scheduleAt());
-        }
-        if (dto.serviceId() != null) {
-            var service = serviceProvidedService.findServiceById(dto.serviceId());
-            appointment.changeService(service);
-        }
-        if (dto.description() != null) {
-            appointment.changeDescription(dto.description());
-        }
+        ServiceProvided service = null;
+        if (dto.serviceId() != null)
+            service = serviceProvidedService.findServiceById(dto.serviceId());
+
+        appointment.update(dto.scheduleAt(), service, dto.description(), false);
+
         return appointmentMapper.toResponse(appointment);
     }
 
