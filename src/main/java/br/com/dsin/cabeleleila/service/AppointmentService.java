@@ -32,13 +32,14 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentResponse create(User user, AppointmentCreateRequest appointmentDTO) {
-        var id = user.getId();
-        var client = clientService.findByUserId(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        var userId = user.getId();
+        var client = clientService.findByUserId(userId).orElseThrow(() -> new RuntimeException("Client not found"));
         var service = serviceProvidedService.findServiceById(appointmentDTO.serviceId());
         var newAppointment = new Appointment(null, client, service, Instant.now(), appointmentDTO.scheduleAt(), appointmentDTO.description(), ScheduleStatus.PENDING);
 
 
-        var alreadySchedule = appointmentRepository.findScheduleInWeek(id, appointmentDTO.scheduleAt());
+        var alreadySchedule = appointmentRepository.findScheduleInWeek(client.getId(), appointmentDTO.scheduleAt());
+        System.out.println(alreadySchedule);
         var appointment = appointmentRepository.save(newAppointment);
         if (alreadySchedule.isPresent()) {
             return appointmentMapper.toResponseWithSuggestion(appointment, alreadySchedule.get());
@@ -84,12 +85,13 @@ public class AppointmentService {
         return appointmentMapper.toResponse(appointment);
     }
 
-    public Page<AppointmentResponse> findByPeriod(Long clientId, Pageable pageable, Instant initialDate, Instant endDate) {
+    public Page<AppointmentResponse> findByPeriod(Long userId, Pageable pageable, Instant initialDate, Instant endDate) {
         Page<Appointment> appointments;
+        var client = clientService.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
         if (initialDate != null && endDate != null) {
-            appointments = appointmentRepository.findByClientIdAndScheduleAtBetween(pageable, clientId, initialDate, endDate);
+            appointments = appointmentRepository.findByClientIdAndScheduleAtBetween(pageable, client.getId(), initialDate, endDate);
         } else {
-            appointments = appointmentRepository.findPastByClientId(clientId, pageable);
+            appointments = appointmentRepository.findPastByClientId(client.getId(), pageable);
         }
         return appointments.map(appointmentMapper::toResponse);
     }

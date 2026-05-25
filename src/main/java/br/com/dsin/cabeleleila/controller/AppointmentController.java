@@ -45,13 +45,13 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.confirmSuggestion(id, dto));
     }
 
-    @GetMapping("/{clientId}/history")
-    @PreAuthorize("hasRole('ADMIN') or #clientId == authentication.principal.id")
-    public ResponseEntity<Page<AppointmentResponse>> findByPeriod(@PathVariable Long clientId,
+    @GetMapping("/{userId}/history")
+    @PreAuthorize("hasRole('ADMIN') or #userId.equals(authentication.principal.id)")
+    public ResponseEntity<Page<AppointmentResponse>> findByPeriod(@PathVariable Long userId,
                                                                   @RequestParam(required = false) Instant initialDate,
                                                                   @RequestParam(required = false) Instant endDate,
                                                                   @PageableDefault(size = 5, direction = Sort.Direction.DESC)
                                                                   Pageable pageable) {
-        return ResponseEntity.ok(appointmentService.findByPeriod(clientId, pageable, initialDate, endDate));
+        return ResponseEntity.ok(appointmentService.findByPeriod(userId, pageable, initialDate, endDate));
     }
 }
