@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,8 +21,11 @@ public class ClientController {
     private final ClientService clientService;
 
     @PostMapping
-    public ResponseEntity<ClientResponse> registerClient(@RequestBody @Valid ClientCreateRequest dto) {
-        return ResponseEntity.ok(clientService.register(dto));
+    public ResponseEntity<ClientResponse> registerClient(@RequestBody @Valid ClientCreateRequest dto,
+                                                         UriComponentsBuilder uriBuilder) {
+        var clientResponse = clientService.register(dto);
+        var uri = uriBuilder.path("/client/{id}").buildAndExpand(clientResponse.id()).toUri();
+        return ResponseEntity.created(uri).body(clientResponse);
     }
 
     @GetMapping("/{id}")

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,7 +22,10 @@ public class ServiceController {
     private final ServiceProvidedService service;
 
     @PostMapping
-    public ResponseEntity<ServiceProvidedResponse> registerService(@RequestBody @Valid ServiceProvidedCreateRequest dto) {
-        return ResponseEntity.ok(service.register(dto));
+    public ResponseEntity<ServiceProvidedResponse> registerService(@RequestBody @Valid ServiceProvidedCreateRequest dto,
+                                                                   UriComponentsBuilder uriBuilder) {
+        var serviceResponse = service.register(dto);
+        var uri = uriBuilder.path("/service/{id}").buildAndExpand(serviceResponse.id()).toUri();
+        return ResponseEntity.created(uri).body(serviceResponse);
     }
 }

@@ -2,9 +2,9 @@ package br.com.dsin.cabeleleila.controller;
 
 import br.com.dsin.cabeleleila.domain.security.User;
 import br.com.dsin.cabeleleila.dto.request.AppointmentCreateRequest;
-import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
 import br.com.dsin.cabeleleila.dto.request.AppointmentSuggestionConfirmRequest;
 import br.com.dsin.cabeleleila.dto.request.AppointmentUpdateRequest;
+import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
 import br.com.dsin.cabeleleila.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Instant;
 
@@ -30,8 +31,11 @@ public class AppointmentController {
     @PostMapping
     @PreAuthorize("hasRole('CLIENT')")
     public ResponseEntity<AppointmentResponse> create(@AuthenticationPrincipal User user,
-                                                      @RequestBody @Valid AppointmentCreateRequest dto) {
-        return ResponseEntity.ok(appointmentService.create(user,dto));
+                                                      @RequestBody @Valid AppointmentCreateRequest dto,
+                                                      UriComponentsBuilder uriBuilder) {
+        var appointmentResponse = appointmentService.create(user, dto);
+        var uri = uriBuilder.path("/appointment/{id}").buildAndExpand(appointmentResponse.id()).toUri();
+        return ResponseEntity.created(uri).body(appointmentResponse);
     }
 
     @PutMapping("{id}")
@@ -45,6 +49,7 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.confirmSuggestion(id, dto));
     }
 
+    //Poderia separar em dois endpoints: um para Admin e outro para User (ja existe controller para endpoints de Admin)
     @GetMapping("/{userId}/history")
     @PreAuthorize("hasRole('ADMIN') or #userId.equals(authentication.principal.id)")
     public ResponseEntity<Page<AppointmentResponse>> findByPeriod(@PathVariable Long userId,
