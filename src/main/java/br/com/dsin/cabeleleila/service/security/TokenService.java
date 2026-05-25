@@ -1,17 +1,17 @@
 package br.com.dsin.cabeleleila.service.security;
 
 import br.com.dsin.cabeleleila.domain.security.User;
+import br.com.dsin.cabeleleila.exceptions.InvalidTokenException;
+import br.com.dsin.cabeleleila.exceptions.TokenGenerationException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 @Service
 public class TokenService {
@@ -31,7 +31,7 @@ public class TokenService {
 //                    .withExpiresAt(dataExpiracao())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
-            throw new RuntimeException("Error generate JWT token");
+            throw new TokenGenerationException("Error generate JWT token");
         }
     }
 
@@ -52,7 +52,7 @@ public class TokenService {
                     .getClaim("id")
                     .asLong();
         } catch (JWTVerificationException exception) {
-            throw new RuntimeException("Token inválido ou expirado");
+            throw new InvalidTokenException("Invalid or expired token");
         }
     }
 }

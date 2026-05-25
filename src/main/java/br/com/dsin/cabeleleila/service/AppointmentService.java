@@ -9,6 +9,8 @@ import br.com.dsin.cabeleleila.dto.request.AppointmentStatusUpdateRequest;
 import br.com.dsin.cabeleleila.dto.request.AppointmentSuggestionConfirmRequest;
 import br.com.dsin.cabeleleila.dto.request.AppointmentUpdateRequest;
 import br.com.dsin.cabeleleila.dto.response.AppointmentResponse;
+import br.com.dsin.cabeleleila.exceptions.BusinessRuleException;
+import br.com.dsin.cabeleleila.exceptions.ResourceNotFoundException;
 import br.com.dsin.cabeleleila.mapper.AppointmentMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,13 +35,12 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse create(User user, AppointmentCreateRequest appointmentDTO) {
         var userId = user.getId();
-        var client = clientService.findByUserId(userId).orElseThrow(() -> new RuntimeException("Client not found"));
+        var client = clientService.findByUserId(userId);
         var service = serviceProvidedService.findServiceById(appointmentDTO.serviceId());
         var newAppointment = new Appointment(null, client, service, Instant.now(), appointmentDTO.scheduleAt(), appointmentDTO.description(), ScheduleStatus.PENDING);
 
 
         var alreadySchedule = appointmentRepository.findScheduleInWeek(client.getId(), appointmentDTO.scheduleAt());
-        System.out.println(alreadySchedule);
         var appointment = appointmentRepository.save(newAppointment);
         if (alreadySchedule.isPresent()) {
             return appointmentMapper.toResponseWithSuggestion(appointment, alreadySchedule.get());
@@ -50,7 +51,7 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentResponse update(Long id, AppointmentUpdateRequest dto) {
-        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment", id.toString()));
         var date = appointment.getScheduleAt();
         if (dto.scheduleAt() != null) {
             validateReschedule(appointment);
@@ -69,17 +70,17 @@ public class AppointmentService {
     private void validateReschedule(Appointment appointment) {
         long hoursRemaining = Duration.between(Instant.now(), appointment.getScheduleAt()).toHours();
         if (hoursRemaining < RESCHEDULE_DEADLINE_HOURS) {
-            throw new RuntimeException("Appointment can only be rescheduled by phone when less than 2 days away");
+            throw new BusinessRuleException("Appointment can only be rescheduled by phone when less than 2 days away");
         }
     }
 
     @Transactional
     public AppointmentResponse confirmSuggestion(Long id, AppointmentSuggestionConfirmRequest dto) {
-        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment", id.toString()));
         var suggestedDate = appointmentRepository.findScheduleInWeek(appointment.getClient().getId(), appointment.getScheduleAt())
-                .orElseThrow(() -> new RuntimeException("No suggestion available for this appointment"));
+                .orElseThrow(() -> new BusinessRuleException("No rescheduling suggestion available"));
         if (!suggestedDate.equals(dto.newDate())) {
-            throw new RuntimeException("The confirmed date must match the suggested date: " + suggestedDate);
+            throw new BusinessRuleException("The confirmed date must match the suggested date: " + suggestedDate);
         }
         appointment.changeSchedule(dto.newDate());
         return appointmentMapper.toResponse(appointment);
@@ -87,7 +88,7 @@ public class AppointmentService {
 
     public Page<AppointmentResponse> findByPeriod(Long userId, Pageable pageable, Instant initialDate, Instant endDate) {
         Page<Appointment> appointments;
-        var client = clientService.findByUserId(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        var client = clientService.findByUserId(userId);
         if (initialDate != null && endDate != null) {
             appointments = appointmentRepository.findByClientIdAndScheduleAtBetween(pageable, client.getId(), initialDate, endDate);
         } else {
@@ -105,7 +106,7 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentResponse adminUpdate(Long id, @Valid AppointmentUpdateRequest dto) {
-        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment", id.toString()));
         if (dto.scheduleAt() != null) {
             appointment.changeSchedule(dto.scheduleAt());
         }
@@ -121,7 +122,7 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentResponse updateStatus(Long id, AppointmentStatusUpdateRequest dto) {
-        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        var appointment = appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Appointment", id.toString()));
         appointment.changeStatus(dto.status());
         return appointmentMapper.toResponse(appointment);
     }

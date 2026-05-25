@@ -2,10 +2,11 @@ package br.com.dsin.cabeleleila.service;
 
 import br.com.dsin.cabeleleila.domain.Client;
 import br.com.dsin.cabeleleila.domain.repository.ClientRepository;
-import br.com.dsin.cabeleleila.domain.security.User;
 import br.com.dsin.cabeleleila.dto.request.ClientCreateRequest;
 import br.com.dsin.cabeleleila.dto.response.ClientDetailResponse;
 import br.com.dsin.cabeleleila.dto.response.ClientResponse;
+import br.com.dsin.cabeleleila.exceptions.ConflictException;
+import br.com.dsin.cabeleleila.exceptions.ResourceNotFoundException;
 import br.com.dsin.cabeleleila.mapper.ClientMapper;
 import br.com.dsin.cabeleleila.service.security.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -40,18 +40,18 @@ public class ClientService {
 
     private void validateEmailAvailability(String email) {
         if (clientRepository.existsByEmail(email)) {
-            throw new RuntimeException("Email already in use");
+            throw new ConflictException("Email already in use");
         }
     }
 
     private void validatePhoneAvailability(String phone) {
         if (clientRepository.existsByPhone(phone)) {
-            throw new RuntimeException("Phone already in use");
+            throw new ConflictException("Phone already in use");
         }
     }
 
     public ClientDetailResponse findById(Long id) {
-        var client = clientRepository.findById(id).orElseThrow(() -> new RuntimeException("Client not found"));
+        var client = clientRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client", id.toString()));
         return clientMapper.toDetailResponse(client);
     }
 
@@ -59,12 +59,7 @@ public class ClientService {
         return clientRepository.findAll(pageable).map(clientMapper::toResponse);
     }
 
-    public Client findClientById(Long id) {
-        System.out.println("ID QUE CHEGOU NO SERVICE DE CLIENT: "+id);
-        return clientRepository.findById(id).orElseThrow(()-> new RuntimeException("Client not found"));
-    }
-
-    public Optional<Client> findByUserId(Long id) {
-        return clientRepository.findByUserId(id);
+    public Client findByUserId(Long id) {
+        return clientRepository.findByUserId(id).orElseThrow(() -> new ResourceNotFoundException("Client", id.toString()));
     }
 }
