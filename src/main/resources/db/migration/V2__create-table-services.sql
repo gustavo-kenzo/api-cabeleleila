@@ -1,0 +1,7 @@
+CREATE TABLE services (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    price DECIMAL(6,2) NOT NULL,
+    description VARCHAR(500),
+    active BOOLEAN NOT NULL DEFAULT TRUE
+);
